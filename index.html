@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>PayMore - Payments </title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayMore - Payment QR Code Generator</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f9fc;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .container h1 {
+            font-size: 36px; /* Larger font size */
+            font-weight: bold; /* Bold font */
+            color: #007BFF;
+            margin-bottom: 10px;
+            font-family: 'Arial Black', Gadget, sans-serif; /* Modern font */
+        }
+        .container p {
+            font-size: 16px; /* Larger font for better readability */
+            color: #555;
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #qr-code {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f7f9fc;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 200px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .buttons button {
+            width: 48%; /* Equal size buttons */
+        }
+        .notes {
+            font-size: 14px;
+            color: #444;
+            background: #e9f5ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            line-height: 1.6;
+            text-align: left;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #555;
+            text-align: center;
+        }
+        footer span {
+            font-weight: bold;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PayMore</h1>
+        <p>Generate a secure payment QR code for your transaction or proceed directly to pay using your preferred UPI app.</p>
+        
+        <label for="sender-name"><strong>Sender Name:</strong></label>
+        <input type="text" id="sender-name" placeholder="Enter your name">
+
+        <label for="amount"><strong>Enter Amount:</strong></label>
+        <input type="number" id="amount" placeholder="Enter amount to pay" min="1">
+
+        <button onclick="generateQRCode()">Generate QR Code</button>
+        
+        <div id="qr-code">QR Code will appear here</div>
+
+        <div class="buttons">
+            <button id="pay-btn" style="display: none;" onclick="redirectToUPI()">Pay Now</button>
+            <button id="save-btn" style="display: none;" onclick="saveQRCode()">Save QR Code</button>
+        </div>
+
+        <div class="notes">
+            <p><strong>Note:</strong></p>
+            <ul>
+                <li>Use any UPI-enabled payment application to scan the QR code.</li>
+                <li>Ensure the entered name and amount are correct before proceeding.</li>
+                <li>Payments will be verified and processed securely by PayMore.</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <p>© <span>PayMore by Abhishek</span>. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        const upiID = "9351044618@mbk"; // Constant UPI ID
+        let upiLink = ""; // To hold the generated UPI link
+        let qrCodeGenerated = false; // Flag to check if QR code is generated
+
+        function generateQRCode() {
+            const nameInput = document.getElementById("sender-name");
+            const amountInput = document.getElementById("amount");
+            const senderName = nameInput.value.trim(); // Get sender's name
+            const amount = parseFloat(amountInput.value); // Parse the amount
+
+            // Validate inputs
+            if (!senderName) {
+                alert("Please enter your name.");
+                nameInput.focus();
+                return;
+            }
+            if (!amount || amount <= 0) {
+                alert("Please enter a valid amount greater than 0.");
+                amountInput.focus();
+                return;
+            }
+
+            // Construct the UPI payment link
+            const paymentNote = `Payment by ${encodeURIComponent(senderName)}`;
+            upiLink = `upi://pay?pa=${upiID}&pn=PayMore&am=${amount}&cu=INR&tn=${paymentNote}`;
+
+            // Generate the QR code
+            const qrCodeContainer = document.getElementById("qr-code");
+            qrCodeContainer.innerHTML = ""; // Clear any existing QR code
+            new QRCode(qrCodeContainer, {
+                text: upiLink,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            qrCodeGenerated = true; // Set the flag to true once the QR code is generated
+
+            // Show the "Pay Now" and "Save QR Code" buttons
+            document.getElementById("pay-btn").style.display = "block";
+            document.getElementById("save-btn").style.display = "block";
+        }
+
+        function redirectToUPI() {
+            if (upiLink) {
+                // Redirect to the UPI payment link
+                window.location.href = upiLink;
+            } else {
+                alert("Please generate the QR code first!");
+            }
+        }
+
+        function saveQRCode() {
+            if (qrCodeGenerated) {
+                const qrCodeContainer = document.getElementById("qr-code");
+                const qrCodeImg = qrCodeContainer.querySelector("img");
+
+                if (qrCodeImg) {
+                    const link = document.createElement("a");
+                    link.href = qrCodeImg.src; // Get the QR code image source
+                    link.download = "PayMore_QR_Code.png"; // Name the downloaded image
+                    link.click();
+                } else {
+                    alert("QR code image not found. Please regenerate the QR code.");
+                }
+            } else {
+                alert("Please generate the QR code first!");
+            }
+        }
+    </script>
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
